@@ -32,8 +32,11 @@ try {
   run(['run','-d','--name',name,'-p','127.0.0.1::8080','--read-only','--tmpfs','/tmp','--cap-drop=ALL','--security-opt=no-new-privileges',
     '-v',`${file}:/etc/ntfy/server.yml:ro`,'-v',`${volume}:/var/lib/ntfy`,image]);
   started = true;
-  const port = run(['port',name,'8080/tcp']).match(/127\.0\.0\.1:(\d+)/)?.[1];
-  assert.ok(port); const base = `http://127.0.0.1:${port}`;
+  function address() {
+    const port = run(['port',name,'8080/tcp']).match(/127\.0\.0\.1:(\d+)/)?.[1];
+    assert.ok(port); return `http://127.0.0.1:${port}`;
+  }
+  let base = address();
   const reader = 'Basic '+Buffer.from(`test-reader:${password}`).toString('base64');
   const writer = 'Bearer '+token;
   async function request(path, auth, body) {
@@ -76,7 +79,7 @@ try {
   const perms=run(['exec',name,'stat','-c','%a','/var/lib/ntfy/auth.db']).trim(); assert.equal(perms,'600');
   config['auth-users']=config['auth-users'].filter(row=>!row.startsWith('test-reader:'));
   config['auth-access']=config['auth-access'].filter(row=>!row.startsWith('test-reader:'));
-  writeFileSync(file,JSON.stringify(config)); run(['restart',name]); await healthy();
+  writeFileSync(file,JSON.stringify(config)); run(['restart',name]); base = address(); await healthy();
   assert.ok([401,403].includes(await request('/haustuer/json?poll=1',reader)));
   console.log('ntfy integration: ACLs, real subscription/delivery, persistence permissions and device revocation passed');
 } finally {
