@@ -2,7 +2,7 @@
 
 Stand: 08.10.2026.
 
-- `npm ci` und `npm test`: 17 Tests, alle bestanden. Authfehler/GET/POST, gültige Aufnahme vor Amazon-Abschluss, Debounce, volle Queue, Liveness/Readiness bei Alexa-Ausfall, Ablauf alter Ereignisse, Queue-Verwerfen bei Fehler, vollständige Zielvalidierung, Teilausfall, Timeout/verspäteter Callback, sichere Session-Rechte, Config-Validierung sowie tatsächlicher Upstream-Speak mit JSON-HTTP-503 und aktiver Transport-Deadline.
+- `npm ci` und `npm test`: 17 Tests, alle bestanden. Authfehler/GET/POST, gültige Aufnahme vor Amazon-Abschluss, Debounce, volle Queue, Liveness/Readiness bei Alexa-Ausfall, Ablauf alter Ereignisse, Queue-Verwerfen bei Fehler, vollständige Zielvalidierung, Teilausfall, Timeout/verspäteter Callback, sichere Session-Rechte, Config-Validierung sowie lokaler Login-Proxy mit persistenter Geräteidentität und tatsächlicher Upstream-Speak mit JSON-HTTP-503 und aktiver Transport-Deadline.
 - `node node_modules/alexa-cookie2/test/run-tests.js`: 12 Upstream-Testdateien bestanden (inklusive Registration und Login-Proxy).
 - `npm audit`: fünf High-Einträge aus der beschriebenen transitiven braces-Lücke verbleiben; Cookie-Lücke behoben. Kein `audit fix --force`/Alexa-Downgrade.
 - Lokaler Login-Proxy ohne Zugangsdaten: Start, Registration-Datei 0600/Verzeichnis 0700 und Wiederverwendung der Geräteidentität bei erneutem Start geprüft. Keine Amazon-Anmeldung dabei durchgeführt.

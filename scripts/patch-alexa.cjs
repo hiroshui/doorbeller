@@ -21,3 +21,19 @@ if (!source.includes('// doorbeller transport guards')) {
   }
   fs.writeFileSync(path, source);
 }
+// The proxy ignores its custom store path when reading and otherwise replaces
+// even a supplied registration's identity. Preserve identity across local setup.
+if (require('alexa-cookie2/package.json').version !== '5.0.6') throw new Error('Review login registration patch for new upstream version');
+const proxyPath = require.resolve('alexa-cookie2/lib/proxy');
+let proxy = fs.readFileSync(proxyPath, 'utf8');
+if (!proxy.includes('// doorbeller registration guards')) {
+  const substitutions = [
+    ["fs.readFileSync(path.join(__dirname, 'formerDataStore.json'), 'utf8')", "fs.readFileSync(formerDataStorePath, 'utf8')"],
+    ["if (!_options.formerRegistrationData || !_options.formerRegistrationData.deviceId || !formerDataStoreValid) {", "// doorbeller registration guards\n    if (!_options.formerRegistrationData || !_options.formerRegistrationData.deviceId) {"]
+  ];
+  for (const [from, to] of substitutions) {
+    if (proxy.split(from).length !== 2) throw new Error('Upstream proxy source changed; review required');
+    proxy = proxy.replace(from, to);
+  }
+  fs.writeFileSync(proxyPath, proxy);
+}
