@@ -59,3 +59,11 @@ test('successful independent auth check recovers availability; failure keeps unr
 test('different target identifiers for the same serial announce only once', async () => {
   const f = fixture(['A', '1']); await f.client.announce(); assert.deepEqual(f.calls, ['1']);
 });
+test('all targets selects online individual Echos and omits offline devices and groups', async () => {
+  const f = fixture(['all']);
+  Object.assign(f.remote.serialNumbers.a, { online: true, deviceFamily: 'ECHO' });
+  Object.assign(f.remote.serialNumbers.b, { online: false, deviceFamily: 'ECHO' });
+  f.remote.serialNumbers.group = { serialNumber: 'group', online: true, deviceFamily: 'WHA', capabilities: ['AUDIO_PLAYER'] };
+  await f.client.announce(); assert.deepEqual(f.calls, ['1']);
+  f.remote.serialNumbers.a.online = false; assert.throws(() => f.client.resolveTargets());
+});

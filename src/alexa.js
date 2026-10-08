@@ -45,6 +45,11 @@ export class AlexaClient {
   }
   resolveTargets() {
     const devices = Object.values(this.remote.serialNumbers);
+    if (this.cfg.targets.length === 1 && this.cfg.targets[0] === 'all') {
+      const available = devices.filter(d => d.deviceFamily === 'ECHO' && d.capabilities?.includes('AUDIO_PLAYER') && d.online === true);
+      if (!available.length) throw new Error('No online Echos');
+      return [...new Set(available.map(d => d.serialNumber))];
+    }
     return [...new Set(this.cfg.targets.map(target => {
       const matches = devices.filter(d => d.serialNumber === target || d.accountName === target);
       if (matches.length !== 1 || !matches[0].capabilities?.includes('AUDIO_PLAYER') || matches[0].online === false) throw new Error('Invalid target');
@@ -53,7 +58,7 @@ export class AlexaClient {
   }
   ready() { return !this.sessionError && this.state === 'ready'; }
   async check() {
-    if (this.stopped || ['starting', 'authenticating', 'checking', 'login_required', 'invalid_targets', 'session_error'].includes(this.state)) return;
+    if (this.stopped || ['starting', 'authenticating', 'checking', 'login_required', 'session_error'].includes(this.state)) return;
     this.state = 'checking';
     try {
       await deadline(() => new Promise((resolve, reject) => this.remote.checkAuthentication((ok, err) => ok ? resolve() : reject(err ?? new Error('auth')))), this.cfg.timeoutMs);

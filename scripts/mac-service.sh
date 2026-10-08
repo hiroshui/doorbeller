@@ -23,7 +23,12 @@ while :; do
     podman machine start >/dev/null 2>&1 || true
   fi
   if podman info >/dev/null 2>&1; then
-    if ! podman compose --profile tunnel up -d gateway cloudflared >/dev/null 2>&1; then
+    if [ -f secrets/ntfy/server.yml ]; then
+      stack_services='gateway cloudflared ntfy'
+    else
+      stack_services='gateway cloudflared'
+    fi
+    if ! podman compose --profile tunnel --profile notifications up -d $stack_services >/dev/null 2>&1; then
       echo 'Doorbeller: Containerstart fehlgeschlagen; erneuter Versuch in 60 Sekunden.' >&2
     fi
   else

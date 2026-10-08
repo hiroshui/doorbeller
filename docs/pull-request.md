@@ -1,14 +1,9 @@
-# Titel
-DoorBird-Klingeln über ein Node.js-Gateway auf ausgewählten Echos ansagen
+# DoorBird-Klingeln an Echos, Mac und private Handy-/PC-Abos ausgeben
 
-# Beschreibung
-Implementiert einen einzelnen Node.js-Gateway mit alexa-remote2 für authentifizierte DoorBird-GET-/POST-Aufrufe und deutsche Echo-Ansagen. Ereignisse werden asynchron mit Debounce, begrenzter Queue und Ablaufzeit verarbeitet; Teilfehler und Timeouts lösen keine erneuten Ansagen aus. Lokaler interaktiver Amazon-Login mit MFA, restriktiv persistierte Refresh-Daten, getrennte Health-Routen und optionaler Cloudflare Tunnel sind enthalten.
+Implementiert einen Node.js-Gateway für authentifizierte DoorBird-GET-/POST-Aufrufe mit asynchroner, begrenzter Queue, Debounce und Ereignisablauf. Ausgaben erfolgen unabhängig an Alexa/Echos und optional einen privaten ntfy-Server; erfolgreiche Ausgaben werden bei Teilausfall nicht wiederholt. `ECHO_TARGETS=all` wählt online gemeldete einzelne Echos. Ein lokaler macOS-Autostart startet Podman/Gateway/Tunnel/ntfy und zeigt native Klingelmitteilungen.
 
-Docker/Compose für ARM64 und AMD64, Secret-Dateien, lokale Testport-Overrides sowie deutsche Einrichtungs-, Betriebs- und Migrationsanleitung sind enthalten. Die Alexa-Dependency ist fixiert; ein enger versionsgeprüfter Transport-Patch verhindert blinde Wiederholungen und schließt Requests bei Deadline.
+Enthält lokalen Amazon-Login mit MFA und privaten persistenten Sessions, einen engen geprüften Upstream-Patch für Deadlines/Retrys/Login-Identität, Docker/Compose für ARM64/AMD64, optionalen Cloudflare Tunnel und deutsche Einrichtung/Migration. ntfy ist fixiert, ohne Signup/öffentliche Host-Ports, mit Default-deny und getrennten Writer-/Reader-Rechten. Lokale Setup-/Gerätebefehle erzeugen einzeln widerrufbare Lesegeräte und persistente Web-Push-Schlüssel; iOS verwendet den offiziellen Poll-Relay. Zugangsdaten bleiben außerhalb von Repo/Archiv.
 
-Validierung: 19 eigene Tests und 12 Upstream-Testdateien bestanden. Alle Compose-Profile und der lokale Override mit Docker Compose 5.6.0 `config --quiet` validiert. Linux/amd64-Docker-Build und Container-Smoke-Test ohne Zugangsdaten in GitHub Actions erfolgreich. ARM64-Build und echte Amazon-/DoorBird-/Echo-/Tunnel-Tests sind offen. npm audit meldet fünf High-Einträge aus einer derzeit ungefixten transitiven braces-Lücke im Login-Proxy; Cookie-Lücke per kompatiblem Override behoben. Details im Architektur- und Prüfbericht.
+Validierung: 28 eigene Tests und 12 Upstream-Testdateien bestanden. Isolierter realer ntfy-Container prüft ACLs, Stream-Zustellung, Auth-Rechte und Gerätewiderruf; auch in CI eingebunden. Podman/ARM64-Builds von Gateway/ntfy und produktiver Push-Publish erfolgreich; echter Echo-Test vom Benutzer bestätigt. Der öffentliche DoorBird-Gateway ist geprüft. Öffentlicher ntfy-HTTPS-Zugriff inklusive Auth/ACL und tatsächlicher Meldungszustellung geprüft; Handy-/PC-Mitteilung samt Ton auf den Endgeräten noch offen. Fünf bekannte transitive High-Audit-Einträge im nur lokal aktiven Alexa-Login-Proxy bleiben dokumentiert.
 
-Nicht automatisch mergen. Vor Betrieb Erstlogin, Readiness, echte Ansage und DoorBird-Zeitplan gemäß README prüfen.
-
-
-Ergänzt einen installierbaren macOS-LaunchAgent für Podman/Gateway/Tunnel und lokale macOS-Benachrichtigungen bei angenommenen Klingelereignissen. Der lokale Empfänger verfolgt ausschließlich aktuelle Container-Ereignisse, ohne öffentliche Zusatzroute oder Token-Kopie, und verbindet sich nach Neustarts erneut. Autostart und nativer Notification-Aufruf auf dem Mac geprüft; Banner-Sichtbarkeit bleibt von den Mitteilungs-/Fokus-Einstellungen abhängig. Podman/ARM64-Build und echter Echo-Test inzwischen ebenfalls erfolgreich.
+Nicht automatisch mergen. Vor vollständiger Freigabe echte Handy-/PC-Mitteilung und gewünschte Ton-/Fokus-Einstellungen gemäß docs/devices.md prüfen.

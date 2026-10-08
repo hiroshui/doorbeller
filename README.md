@@ -8,7 +8,7 @@ DoorBird — HTTPS GET /ring?token=… — Cloudflare Tunnel — gateway:8080
                                                alexa-remote2 → Amazon → Echos
 ```
 
-Die Implementierung ist mit simulierten Amazon-Antworten getestet. Echter Amazon-Login, MFA, DoorBird-WebHook, Echo-Ausgabe wurden noch nicht getestet. Der Linux/amd64-Container-Build wurde in GitHub Actions erfolgreich geprüft; ein ARM64-Build ist noch offen. Der Alexa-Client verwendet inoffizielle Amazon-Schnittstellen: Änderungen durch Amazon können eine erneute Anmeldung oder ein Dependency-Update erfordern. Ansagen benötigen Internet, Amazon und den laufenden Gateway. Der Mac muss eingeschaltet und wach bleiben; ein Tunnel umgeht keinen Ruhezustand.
+Die Implementierung ist mit simulierten Antworten sowie realen Container-Tests geprüft. Amazon-Login und hörbare Echo-Ausgabe wurden auf dem Mac bestätigt; der Cloudflare-Gateway-Aufruf ist geprüft. Gateway und ntfy wurden unter Podman/ARM64 gebaut, der Gateway zusätzlich unter Linux/amd64 in GitHub Actions. Ende-zu-Ende-Push auf einem Handy/PC und die tatsächliche Banner-Ausgabe bleiben vor Ort zu prüfen. Der Alexa-Client verwendet inoffizielle Amazon-Schnittstellen: Änderungen durch Amazon können eine erneute Anmeldung oder ein Dependency-Update erfordern. Ansagen benötigen Internet, Amazon und den laufenden Gateway. Der Mac muss eingeschaltet und wach bleiben; ein Tunnel umgeht keinen Ruhezustand.
 
 ## 1. Container-Runtime auf dem Mac
 
@@ -34,10 +34,11 @@ node scripts/token.js > secrets/ring_token
 # Alternativ ohne lokales Node.js:
 # docker run --rm node:24-bookworm-slim node -e 'console.log(require("crypto").randomBytes(32).toString("base64url"))' > secrets/ring_token
 : > secrets/tunnel_token
-chmod 644 secrets/ring_token secrets/tunnel_token
+: > secrets/ntfy_publish_token
+chmod 644 secrets/ring_token secrets/tunnel_token secrets/ntfy_publish_token
 ```
 
-Trage in `.env` bei `ECHO_TARGETS` die exakten Echo-Namen aus der Alexa-App oder die Seriennummern ein, durch Kommas getrennt. Mehrdeutige Namen, unbekannte/offline Geräte und Geräte ohne Audio-Player werden abgewiesen. Seriennummern sind bei gleichen Namen vorzuziehen. Alle Ziele werden vor jeder Ansage geprüft, identische Seriennummern werden zusammengefasst.
+Mit `ECHO_TARGETS=all` werden alle aktuell online gemeldeten einzelnen Echos ausgewählt; Gruppen, Tablets und Offline-Geräte werden dabei ausgelassen. Alternativ trage in `.env` bei `ECHO_TARGETS` die exakten Echo-Namen aus der Alexa-App oder die Seriennummern ein, durch Kommas getrennt. Mehrdeutige Namen, unbekannte/offline Geräte und Geräte ohne Audio-Player werden abgewiesen. Seriennummern sind bei gleichen Namen vorzuziehen. Alle Ziele werden vor jeder Ansage geprüft, identische Seriennummern werden zusammengefasst.
 
 Die Secret-Dateien sind für die unterschiedlichen Container-UIDs lesbar (Compose bindet sie ohne UID-Remapping ein); das übergeordnete Host-Verzeichnis `secrets` bleibt **0700** und schützt sie vor anderen Host-Benutzern. Session-Dateien und Session-Sicherungen bleiben **0600**.
 
@@ -69,7 +70,7 @@ header = "Authorization: Bearer $(cat secrets/ring_token)"
 EOF_CURL
 ```
 
-Readiness muss HTTP 200 und `ready:true` liefern. `/ring` liefert **202**, sobald das Ereignis aufgenommen wurde; die tatsächliche Ansage erfolgt danach. Höre an jedem gewählten Echo nach. Ein erfolgreicher Amazon-Aufruf bestätigt keine hörbare Wiedergabe.
+Readiness liefert HTTP 200 und `ready:true`, sobald mindestens ein konfigurierter Ausgabeweg bereit ist; die Felder `alexa` und `push` zeigen getrennte Zustände. `/ring` liefert **202**, sobald das Ereignis aufgenommen wurde; die tatsächliche Ansage erfolgt danach. Höre an jedem gewählten Echo nach. Ein erfolgreicher Amazon-Aufruf bestätigt keine hörbare Wiedergabe.
 
 ```sh
 docker compose logs --tail 50 gateway
@@ -109,10 +110,10 @@ Erst den Testaufruf der App, dann die physische Klingeltaste prüfen. Ein HTTP-F
 
 ## Betrieb und Fehlerfälle
 
-- **202:** aufgenommen. **200 mit `debounced:true`:** Wiederholung im Debounce-Fenster verworfen, kein neues Ereignis. **401:** Token fehlt/falsch. **429:** Queue einschließlich laufendem Ereignis voll. **503:** Alexa nicht bereit oder Shutdown. Fehlgeschlagene Aufnahme verändert das Debounce-Fenster nicht.
-- Queue nur im RAM, maximal vier Ereignisse einschließlich laufender Ansage; fünf Sekunden Debounce; Ereignisse älter als 15 Sekunden werden verworfen. Neustarts verlieren ausstehende Ereignisse bewusst. Bei Ansagefehlern wird die übrige Queue geleert. Keine automatischen Wiederholungen von Ansagen.
+- **202:** aufgenommen. **200 mit `debounced:true`:** Wiederholung im Debounce-Fenster verworfen, kein neues Ereignis. **401:** Token fehlt/falsch. **429:** Queue einschließlich laufendem Ereignis voll. **503:** kein Ausgabeweg bereit oder Shutdown. Fehlgeschlagene Aufnahme verändert das Debounce-Fenster nicht.
+- Queue nur im RAM, maximal vier Ereignisse einschließlich laufender Ansage; fünf Sekunden Debounce; Ereignisse älter als 15 Sekunden werden verworfen. Neustarts verlieren ausstehende Ereignisse bewusst. Wenn alle verfügbaren Ausgabewege scheitern, wird die übrige Queue geleert. Wenn ein Ausgabeweg erfolgreich ist, wird er wegen eines anderen Fehlers nicht wiederholt. Keine automatischen Wiederholungen von Ansagen.
 - Requests an Amazon laufen maximal fünf Sekunden; der Transport wird bei Deadline aktiv geschlossen. Bereits an Amazon übermittelte Ansagen können trotzdem später abgespielt werden; sie lassen sich bei einem unklaren Timeout nicht zurückholen. Der Gateway sendet sie nicht erneut.
-- `/health/live` prüft den Prozess, `/health/ready` zusätzlich Alexa/Auth/Ziele. Der Docker-Healthcheck verwendet Liveness. Readiness während Auth-Prüfung/Refresh ist 503. Jede Minute werden Auth und Geräteliste geprüft; vorübergehende Netzfehler können sich dadurch erholen.
+- `/health/live` prüft den Prozess, `/health/ready` zusätzlich die verfügbaren Ausgabewege (Alexa/Auth/Ziele und optional ntfy). Der Docker-Healthcheck verwendet Liveness. Readiness während Auth-Prüfung/Refresh ist 503. Alle 30 Sekunden werden Auth, Geräteliste und ntfy geprüft; vorübergehende Netzfehler können sich dadurch erholen.
 - alexa-remote2 erneuert die Session täglich, vollständige aktualisierte Registration-Daten werden atomar gespeichert. Bei `login_required` Gateway stoppen und Schritt 3 wiederholen; bei `invalid_targets` Namen/Seriennummern korrigieren und Gateway neu starten. Bei `session_error` Volume/Rechte prüfen. Kein Passwort-Fallback, kein öffentlicher Proxy.
 - `docker compose restart gateway` für kontrollierten Neustart. SIGTERM beendet die Annahme, verwirft Queue und stoppt Alexa-Timer. Compose startet abgestürzte Dienste erneut. Ein `unhealthy`-Status allein erzwingt keinen Neustart.
 - Token rotieren: neues Secret erzeugen, `docker compose up -d --force-recreate gateway`, DoorBird-URL aktualisieren. Tunnel-Token über Cloudflare rotieren.
@@ -177,3 +178,14 @@ Dauerhaft entfernen: anschließend `~/Library/LaunchAgents/de.hiroshui.doorbelle
 Der macOS-Autostart enthält einen lokalen Benachrichtigungsempfänger. Bei jedem authentifizierten, angenommenen Klingelereignis erscheint **DoorBird – Es hat an der Haustür geklingelt.**, zusätzlich zur Echo-Ansage. Er liest ausschließlich die Container-Logs über Podman; kein weiterer öffentlicher Port, kein zusätzlicher Token und kein Account sind erforderlich. Debounce-Aufrufe, abgelehnte Requests und alte Logeinträge lösen keine Benachrichtigung aus. Nach Unterbrechungen werden keine alten Klingeln nachgeliefert.
 
 Nach einem Update einmal `podman compose build gateway`, anschließend `podman compose --profile tunnel up -d --force-recreate gateway` und `npm run mac:install` ausführen. Der Empfänger verwendet das lokale Homebrew-Node.js aus dem Autostart-PATH. macOS kann Benachrichtigungen über Systemeinstellungen → Mitteilungen → Script Editor/osascript sowie Fokus-Einstellungen unterdrücken. Der Empfänger muss in deiner angemeldeten Sitzung laufen; bei ausgeschaltetem Mac erscheinen keine Hinweise. Das Ereignis bestätigt das Klingeln, nicht die erfolgreiche Wiedergabe auf einem Echo.
+
+## Handys und PCs abonnieren lassen
+
+Optional liefert ein privater **ntfy-Server** Klingelmeldungen an die fertigen Android-/iOS-Apps und die PC-Web-App. Geräte erhalten einzeln widerrufbare Leserechte; nur der Gateway darf senden. Ein Alexa-Ausfall blockiert diesen Ausgabeweg nicht. Einrichtung, Ton-/Push-Einstellungen, Cloudflare-Route und weitere Geräte: **[Geräte-Anleitung](docs/devices.md)**.
+
+```sh
+npm run ntfy:setup
+npm run ntfy:device -- add handy-maxi
+```
+
+Die lokale Zugangsdaten-Datei anschließend auf dem betreffenden Gerät verwenden. Die `.env`-Aktivierung und zusätzliche Route `notify.hiroshui.men → ntfy:8080` sind in der Anleitung beschrieben. Server und Push-Relay sind optional; die bestehenden Echo-/Mac-Funktionen bleiben verfügbar.

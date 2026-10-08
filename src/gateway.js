@@ -19,13 +19,13 @@ export function createGateway(cfg, alexa, { now = Date.now, log = defaultLog } =
     try { url = new URL(req.url, 'http://gateway'); } catch { return reply(400, { error: 'bad_request' }); }
     // Never log URL, headers, body, upstream errors or credentials.
     if (req.method === 'GET' && url.pathname === '/health/live') return reply(stopping ? 503 : 200, { live: !stopping });
-    if (req.method === 'GET' && url.pathname === '/health/ready') return reply(!stopping && alexa.ready() ? 200 : 503, { ready: !stopping && alexa.ready(), alexa: alexa.state });
+    if (req.method === 'GET' && url.pathname === '/health/ready') return reply(!stopping && alexa.ready() ? 200 : 503, { ready: !stopping && alexa.ready(), ...(alexa.status?.() ?? { alexa: alexa.state }) });
     if (url.pathname !== '/ring') return reply(404, { error: 'not_found' });
     if (!['GET', 'POST'].includes(req.method)) return reply(405, { error: 'method_not_allowed' });
     const supplied = req.headers.authorization !== undefined ? (req.headers.authorization.startsWith('Bearer ') ? req.headers.authorization.slice(7) : '') : (url.searchParams.getAll('token').length === 1 ? url.searchParams.get('token') : '');
     const a = Buffer.from(supplied ?? ''), b = Buffer.from(cfg.token);
     if (a.length !== b.length || !timingSafeEqual(a, b)) return reply(401, { error: 'unauthorized' });
-    if (stopping || !alexa.ready()) return reply(503, { error: 'alexa_unavailable' });
+    if (stopping || !alexa.ready()) return reply(503, { error: 'delivery_unavailable' });
     if (now() - lastAccepted < cfg.debounceMs) return reply(200, { debounced: true });
     if (queue.length + Number(running) >= cfg.queueSize) return reply(429, { error: 'queue_full' });
     lastAccepted = now(); queue.push(lastAccepted);
