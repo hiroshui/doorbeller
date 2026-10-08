@@ -8,7 +8,7 @@ DoorBird — HTTPS GET /ring?token=… — Cloudflare Tunnel — gateway:8080
                                                alexa-remote2 → Amazon → Echos
 ```
 
-Die Implementierung ist mit simulierten Amazon-Antworten getestet. Echter Amazon-Login, MFA, DoorBird-WebHook, Echo-Ausgabe und Docker-Build wurden noch nicht getestet. Der Alexa-Client verwendet inoffizielle Amazon-Schnittstellen: Änderungen durch Amazon können eine erneute Anmeldung oder ein Dependency-Update erfordern. Ansagen benötigen Internet, Amazon und den laufenden Gateway. Der Mac muss eingeschaltet und wach bleiben; ein Tunnel umgeht keinen Ruhezustand.
+Die Implementierung ist mit simulierten Amazon-Antworten getestet. Echter Amazon-Login, MFA, DoorBird-WebHook, Echo-Ausgabe wurden noch nicht getestet. Der Linux/amd64-Container-Build wurde in GitHub Actions erfolgreich geprüft; ein ARM64-Build ist noch offen. Der Alexa-Client verwendet inoffizielle Amazon-Schnittstellen: Änderungen durch Amazon können eine erneute Anmeldung oder ein Dependency-Update erfordern. Ansagen benötigen Internet, Amazon und den laufenden Gateway. Der Mac muss eingeschaltet und wach bleiben; ein Tunnel umgeht keinen Ruhezustand.
 
 ## 1. Container-Runtime auf dem Mac
 

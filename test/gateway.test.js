@@ -17,6 +17,7 @@ async function fixture(t, overrides = {}) {
 test('GET and POST authentication, malformed and duplicate tokens; logs omit secrets', async t => {
   const f = await fixture(t);
   assert.equal((await f.request('/ring')).status, 401);
+  assert.equal((await f.request('/ring', { headers: { Authorization: token } })).status, 401);
   assert.equal((await f.request('/ring?token=wrong')).status, 401);
   assert.equal((await f.request(`/ring?token=${token}&token=${token}`)).status, 401);
   assert.equal((await f.request('/ring', { method: 'POST', headers: { Authorization: `Bearer ${token}` } })).status, 202);
