@@ -15,7 +15,8 @@
     "mac:install": "node scripts/mac-service-install.js",
     "ntfy:setup": "node scripts/ntfy-setup.js setup",
     "ntfy:device": "node scripts/ntfy-setup.js",
-    "test:ntfy": "node scripts/ntfy-integration.js"
+    "test:ntfy": "node scripts/ntfy-integration.js",
+    "audio:prepare": "node scripts/audio-prepare.js"
   },
   "dependencies": {
     "alexa-remote2": "8.1.1"

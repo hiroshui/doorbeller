@@ -10,3 +10,5 @@
 - **Dependencies**: npm audit meldet die fünf dokumentierten transitiven High-Einträge im lokalen Alexa-Login-Proxy; Cookie-Lücke behoben. Kein ungeprüftes `audit fix --force`.
 
 Lokale Gerätezugänge wurden für `handy-maxi` und `pc-maxi` mit reinen Leserechten erzeugt. Sie liegen ausschließlich in `secrets/ntfy/*.json` (0600, privates Verzeichnis), nicht im Repo/Archiv. Neue Geräte/Widerruf: `npm run ntfy:device -- add NAME` beziehungsweise `remove NAME`. Anleitung: [devices.md](devices.md).
+
+Eigener Clip 00:58–01:02,5: vorbereitet (24 kHz/Stereo/48 kbit/s), öffentlicher HTTPS-Abruf bytegenau geprüft. Echo-SSML-Aufruf API-seitig akzeptiert, vom Benutzer als stumm bzw. Skill-Fehlermeldung bestätigt. Experimentelle Audio-Ausgabe entfernt und vorheriger Speak-Weg wiederhergestellt; Hilfsbefehl bleibt zur Clip-Vorbereitung.
