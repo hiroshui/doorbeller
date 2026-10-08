@@ -11,7 +11,8 @@
     "login": "node src/login.js",
     "test": "node --test",
     "token": "node scripts/token.js",
-    "postinstall": "node scripts/patch-alexa.cjs"
+    "postinstall": "node scripts/patch-alexa.cjs",
+    "mac:install": "node scripts/mac-service-install.js"
   },
   "dependencies": {
     "alexa-remote2": "8.1.1"

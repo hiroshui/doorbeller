@@ -144,3 +144,30 @@ node node_modules/alexa-cookie2/test/run-tests.js
 ```
 
 Node >=22; getestet mit Node 26.7.0. Alexa-Version und transitive Dependencies sind im Lockfile fixiert. `npm ci` installiert einen engen, versiongeprüften Transport-Patch; Docker führt ihn ausdrücklich nach Installation ohne Dependency-Scripts aus. Details, Quellen und verbleibende Dependency-Lücke: [Architektur](docs/architecture.md). Test-/Build-Status: [Prüfbericht](docs/verification.md).
+
+## macOS-Autostart mit Podman
+
+Nach erfolgreicher Einrichtung von Gateway und Tunnel einmal im Projektverzeichnis ausführen:
+
+```sh
+npm run mac:install
+```
+
+Installiert einen Benutzer-LaunchAgent `de.hiroshui.doorbeller` und startet ihn sofort. Bei jeder macOS-Anmeldung startet er bei Bedarf die vorhandene Podman-Machine und hält Gateway sowie Tunnel mit der aktuellen `.env` am Laufen. Alle 60 Sekunden wird der Compose-Zustand erneut hergestellt; fehlende/gestoppte Container werden gestartet. `caffeinate -i -s` verhindert den automatischen Ruhezustand, während der Bildschirm ausgehen darf. Ein geschlossener Deckel kann trotzdem Ruhezustand erzwingen. Vor einer Benutzeranmeldung läuft dieser Benutzer-Autostart nicht. Projektverzeichnis und Secret-Dateien müssen am selben Ort bleiben; nach Verschieben `npm run mac:install` erneut ausführen.
+
+Status und Logs:
+
+```sh
+launchctl print "gui/$(id -u)/de.hiroshui.doorbeller"
+podman compose ps
+podman compose logs --tail 50 gateway cloudflared
+```
+
+Supervisor-Logs: `~/Library/Logs/doorbeller/`. Zum bewussten Stoppen zuerst den Autostart abschalten, sonst startet er die Container erneut:
+
+```sh
+launchctl bootout "gui/$(id -u)/de.hiroshui.doorbeller"
+podman compose --profile tunnel stop gateway cloudflared
+```
+
+Dauerhaft entfernen: anschließend `~/Library/LaunchAgents/de.hiroshui.doorbeller.plist` löschen. Andere Projekte und Podman-Machines werden nicht gestoppt.
