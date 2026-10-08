@@ -5,8 +5,20 @@ export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 cd "$(dirname "$0")/.." || exit 1
 /usr/bin/caffeinate -i -s &
 awake_pid=$!
-trap 'kill "$awake_pid" 2>/dev/null || true; exit 0' TERM INT EXIT
+node scripts/mac-notifier.js &
+notifier_pid=$!
+sleep_pid=''
+cleanup() {
+  trap - TERM INT EXIT
+  kill "$awake_pid" "$notifier_pid" "$sleep_pid" 2>/dev/null || true
+  exit 0
+}
+trap cleanup TERM INT EXIT
 while :; do
+  if ! kill -0 "$notifier_pid" 2>/dev/null; then
+    node scripts/mac-notifier.js &
+    notifier_pid=$!
+  fi
   if ! podman info >/dev/null 2>&1; then
     podman machine start >/dev/null 2>&1 || true
   fi
@@ -18,5 +30,6 @@ while :; do
     echo 'Doorbeller: Podman noch nicht verfügbar; erneuter Versuch in 60 Sekunden.' >&2
   fi
   sleep 60 &
-  wait $! || true
+  sleep_pid=$!
+  wait "$sleep_pid" || true
 done

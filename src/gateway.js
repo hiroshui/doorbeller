@@ -30,6 +30,7 @@ export function createGateway(cfg, alexa, { now = Date.now, log = defaultLog } =
     if (queue.length + Number(running) >= cfg.queueSize) return reply(429, { error: 'queue_full' });
     lastAccepted = now(); queue.push(lastAccepted);
     reply(202, { accepted: true });
+    log('ring_accepted');
     setImmediate(drain);
   });
   server.requestTimeout = 5000; server.headersTimeout = 5000; server.keepAliveTimeout = 1000;

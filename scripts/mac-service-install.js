@@ -3,6 +3,7 @@ import { homedir } from 'node:os';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { setTimeout as pause } from 'node:timers/promises';
 if (process.platform !== 'darwin') throw new Error('Nur für macOS');
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const label = 'de.hiroshui.doorbeller';
@@ -24,7 +25,13 @@ writeFileSync(plist, `<?xml version="1.0" encoding="UTF-8"?>
 <key>StandardErrorPath</key><string>${escape(join(logs, 'service-error.log'))}</string>
 </dict></plist>\n`, { mode: 0o600 });
 const uid = process.getuid();
-spawnSync('launchctl', ['bootout', `gui/${uid}/${label}`], { stdio: 'ignore' });
+const removed = spawnSync('launchctl', ['bootout', `gui/${uid}/${label}`], { stdio: 'ignore' });
+if (removed.status === 0) {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    if (spawnSync('launchctl', ['print', `gui/${uid}/${label}`], { stdio: 'ignore' }).status !== 0) break;
+    await pause(100);
+  }
+}
 for (const [cmd, args] of [['plutil', ['-lint', plist]], ['launchctl', ['bootstrap', `gui/${uid}`, plist]], ['launchctl', ['kickstart', `gui/${uid}/${label}`]]]) {
   const r = spawnSync(cmd, args, { stdio: 'inherit' }); if (r.status !== 0) process.exit(r.status ?? 1);
 }

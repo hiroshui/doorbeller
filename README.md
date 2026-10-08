@@ -171,3 +171,9 @@ podman compose --profile tunnel stop gateway cloudflared
 ```
 
 Dauerhaft entfernen: anschließend `~/Library/LaunchAgents/de.hiroshui.doorbeller.plist` löschen. Andere Projekte und Podman-Machines werden nicht gestoppt.
+
+### Benachrichtigungen auf diesem Mac
+
+Der macOS-Autostart enthält einen lokalen Benachrichtigungsempfänger. Bei jedem authentifizierten, angenommenen Klingelereignis erscheint **DoorBird – Es hat an der Haustür geklingelt.**, zusätzlich zur Echo-Ansage. Er liest ausschließlich die Container-Logs über Podman; kein weiterer öffentlicher Port, kein zusätzlicher Token und kein Account sind erforderlich. Debounce-Aufrufe, abgelehnte Requests und alte Logeinträge lösen keine Benachrichtigung aus. Nach Unterbrechungen werden keine alten Klingeln nachgeliefert.
+
+Nach einem Update einmal `podman compose build gateway`, anschließend `podman compose --profile tunnel up -d --force-recreate gateway` und `npm run mac:install` ausführen. Der Empfänger verwendet das lokale Homebrew-Node.js aus dem Autostart-PATH. macOS kann Benachrichtigungen über Systemeinstellungen → Mitteilungen → Script Editor/osascript sowie Fokus-Einstellungen unterdrücken. Der Empfänger muss in deiner angemeldeten Sitzung laufen; bei ausgeschaltetem Mac erscheinen keine Hinweise. Das Ereignis bestätigt das Klingeln, nicht die erfolgreiche Wiedergabe auf einem Echo.

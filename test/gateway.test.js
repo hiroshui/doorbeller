@@ -34,6 +34,7 @@ test('202 before Amazon, debounce, bounded queue and explicit overload', async t
   assert.equal((await f.request()).status, 200);
   f.advance(101); assert.equal((await f.request()).status, 202);
   f.advance(101); assert.equal((await f.request()).status, 429);
+  assert.equal(f.logs.filter(event => event === 'ring_accepted').length, 2);
   f.alexa.state = 'unavailable'; finish(); await tick();
   assert.ok(f.logs.includes('event_dropped'));
 });
@@ -53,5 +54,5 @@ test('failure clears queue and does not retry', async t => {
   const f = await fixture(t); let fail; let calls = 0;
   f.alexa.announce = () => { calls++; return new Promise((r, reject) => fail = reject); };
   await f.request(); f.advance(101); await f.request(); fail(new Error(token)); await tick();
-  assert.equal(calls, 1); assert.deepEqual(f.logs, ['event_failed']);
+  assert.equal(calls, 1); assert.deepEqual(f.logs, ['ring_accepted', 'ring_accepted', 'event_failed']);
 });

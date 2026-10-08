@@ -2,7 +2,7 @@
 
 Stand: 08.10.2026.
 
-- `npm ci` und `npm test`: 17 Tests, alle bestanden. Authfehler/GET/POST, gültige Aufnahme vor Amazon-Abschluss, Debounce, volle Queue, Liveness/Readiness bei Alexa-Ausfall, Ablauf alter Ereignisse, Queue-Verwerfen bei Fehler, vollständige Zielvalidierung, Teilausfall, Timeout/verspäteter Callback, sichere Session-Rechte, Config-Validierung sowie lokaler Login-Proxy mit persistenter Geräteidentität und tatsächlicher Upstream-Speak mit JSON-HTTP-503 und aktiver Transport-Deadline.
+- `npm ci` und `npm test`: 19 Tests, alle bestanden. Authfehler/GET/POST, gültige Aufnahme vor Amazon-Abschluss, Debounce, volle Queue, Liveness/Readiness bei Alexa-Ausfall, Ablauf alter Ereignisse, Queue-Verwerfen bei Fehler, vollständige Zielvalidierung, Teilausfall, Timeout/verspäteter Callback, sichere Session-Rechte, Config-Validierung sowie lokaler Login-Proxy mit persistenter Geräteidentität und tatsächlicher Upstream-Speak mit JSON-HTTP-503 und aktiver Transport-Deadline.
 - `node node_modules/alexa-cookie2/test/run-tests.js`: 12 Upstream-Testdateien bestanden (inklusive Registration und Login-Proxy).
 - `npm audit`: fünf High-Einträge aus der beschriebenen transitiven braces-Lücke verbleiben; Cookie-Lücke behoben. Kein `audit fix --force`/Alexa-Downgrade.
 - Lokaler Login-Proxy ohne Zugangsdaten: Start, Registration-Datei 0600/Verzeichnis 0700 und Wiederverwendung der Geräteidentität bei erneutem Start geprüft. Keine Amazon-Anmeldung dabei durchgeführt.
@@ -12,3 +12,6 @@ Stand: 08.10.2026.
 - Amazon/MFA, Session-Refresh gegen Amazon, echte Echo-Ausgabe, Cloudflare-Connector, DoorBird-App-Menüs/WebHook: offen, keine Geräte-/Account-Zugangsdaten verwendet.
 
 Nächste Handgriffe: Docker-Runtime starten; Echo-Namen oder Seriennummern konfigurieren; Ring-Token lokal erzeugen; interaktiven Amazon-Login ausführen; Readiness und Ansage testen; Tunnel/Hostname konfigurieren; DoorBird-HTTP-Favorit mit vollständigem Wochenzeitplan verbinden. Siehe README.
+
+
+Nach Einrichtung auf dem Mac: Podman/ARM64-Image erfolgreich gebaut, Amazon-Login und hörbare Echo-Ansage vom Benutzer bestätigt, öffentlicher Cloudflare-Aufruf angenommen und Alexa-Aufruf erfolgreich. macOS-LaunchAgent installiert und Neustart geprüft. Benachrichtigungsempfänger gestartet: öffentlicher Klingeltest 202, `ring_accepted` und `mac_notification_submitted` protokolliert; osascript Exit 0. Die tatsächliche Sichtbarkeit eines Banners hängt von macOS-Mitteilungs-/Fokus-Einstellungen ab und muss vor Ort bestätigt werden. Zwei weitere Tests prüfen frische/alte Logereignisse und den festen nativen Benachrichtigungsaufruf. Die früher als offen dokumentierten Account-/Tunnel-/Build-Prüfungen beziehen sich auf den ursprünglichen Implementierungsstand.
