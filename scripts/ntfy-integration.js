@@ -43,9 +43,10 @@ try {
   async function healthy() {
     for (let attempt = 0; attempt < 30; attempt++) {
       try { if (await request('/v1/health') === 200) return; } catch {}
-      await pause(100);
+      await pause(1000);
     }
-    throw new Error('ntfy did not become healthy');
+    const logs = run(['logs', name]).replaceAll(password, '[redacted]').replaceAll(token, '[redacted]').replaceAll(hash, '[redacted]');
+    throw new Error(`ntfy did not become healthy: ${logs}`);
   }
   await healthy();
   const body = JSON.stringify({topic:'haustuer',title:'Test',message:'Isolated integration test',priority:4});
