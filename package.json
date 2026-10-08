@@ -1,0 +1,22 @@
+{
+  "name": "doorbeller",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/main.js",
+    "login": "node src/login.js",
+    "test": "node --test",
+    "token": "node scripts/token.js",
+    "postinstall": "node scripts/patch-alexa.cjs"
+  },
+  "dependencies": {
+    "alexa-remote2": "8.1.1"
+  },
+  "overrides": {
+    "cookie": "0.7.2"
+  }
+}
