@@ -27,7 +27,7 @@ Im Projektverzeichnis:
 
 ```sh
 cp .env.example .env
-mkdir -p secrets
+mkdir -p secrets data/audio
 chmod 700 secrets
 # Mit lokalem Node.js >=22:
 node scripts/token.js > secrets/ring_token
@@ -190,4 +190,4 @@ npm run ntfy:device -- add handy-maxi
 
 Die lokale Zugangsdaten-Datei anschließend auf dem betreffenden Gerät verwenden. Die `.env`-Aktivierung und zusätzliche Route `notify.hiroshui.men → ntfy:8080` sind in der Anleitung beschrieben. Server und Push-Relay sind optional; die bestehenden Echo-/Mac-Funktionen bleiben verfügbar.
 
-Audioclip-Vorbereitung und Grenzen des getesteten Echo-Wegs: [docs/audio.md](docs/audio.md).
+Audioclip-Vorbereitung: [docs/audio.md](docs/audio.md). Separater, umschaltbarer Alexa-Musik-Skill: [docs/alexa-skill.md](docs/alexa-skill.md).

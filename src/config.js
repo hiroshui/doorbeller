@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { skillConfig } from './skill.js';
 export function config(env = process.env) {
   const number = (name, fallback, min, max) => {
     const n = Number(env[name] ?? fallback);
@@ -11,6 +12,10 @@ export function config(env = process.env) {
   if (!targets.length || targets.length > 16 || (targets.includes('all') && targets.length !== 1)) throw new Error('Configure 1–16 ECHO_TARGETS');
   const text = env.ANNOUNCEMENT ?? 'Es hat an der Haustür geklingelt.';
   if (!text.trim() || text.length > 250) throw new Error('Invalid ANNOUNCEMENT');
+  const output = env.ALEXA_OUTPUT ?? 'speak';
+  if (!['speak', 'skill'].includes(output)) throw new Error('Invalid ALEXA_OUTPUT');
+  const skill = skillConfig(env);
+  if (output === 'skill' && !skill?.id) throw new Error('Configure skill endpoint and ALEXA_SKILL_ID before selecting skill');
   let push;
   if (env.NTFY_URL) {
     const url = new URL(env.NTFY_URL);
@@ -24,5 +29,5 @@ export function config(env = process.env) {
     if (!message.trim() || message.length > 500) throw new Error('Invalid NTFY_MESSAGE');
     push = { url: url.origin, token: pushToken, topic, text: message, timeoutMs: number('NTFY_TIMEOUT_MS', 3000, 100, 10000) };
   }
-  return { push, token, targets, text, port: number('PORT', 8080, 1, 65535), debounceMs: number('DEBOUNCE_MS', 5000, 0, 60000), queueSize: number('QUEUE_SIZE', 4, 1, 100), maxAgeMs: number('MAX_EVENT_AGE_MS', 15000, 100, 60000), timeoutMs: number('ALEXA_TIMEOUT_MS', 5000, 100, 10000), session: env.SESSION_FILE ?? '/data/session.json' };
+  return { output, skill, push, token, targets, text, port: number('PORT', 8080, 1, 65535), debounceMs: number('DEBOUNCE_MS', 5000, 0, 60000), queueSize: number('QUEUE_SIZE', 4, 1, 100), maxAgeMs: number('MAX_EVENT_AGE_MS', 15000, 100, 60000), timeoutMs: number('ALEXA_TIMEOUT_MS', 5000, 100, 10000), session: env.SESSION_FILE ?? '/data/session.json' };
 }

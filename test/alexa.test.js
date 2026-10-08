@@ -67,3 +67,12 @@ test('all targets selects online individual Echos and omits offline devices and 
   await f.client.announce(); assert.deepEqual(f.calls, ['1']);
   f.remote.serialNumbers.a.online = false; assert.throws(() => f.client.resolveTargets());
 });
+
+test('output switching selects independent skill launch or original speak without fallback/replay', async () => {
+  const f = fixture(['A']); const sent = [];
+  f.remote.sendSequenceCommand = (serial,command,value,cb) => {sent.push({command,value});cb(null,{success:true});};
+  f.client.cfg.output='skill';f.client.cfg.skill={id:'amzn1.ask.skill.test',launch:'id',invocation:'dungeon klingel'};
+  await f.client.announce();assert.deepEqual(sent.pop(),{command:'skill',value:'amzn1.ask.skill.test'});
+  f.client.cfg.skill.launch='text';await f.client.announce();assert.deepEqual(sent.pop(),{command:'textCommand',value:'öffne dungeon klingel'});
+  f.client.cfg.output='speak';await f.client.announce();assert.deepEqual(sent.pop(),{command:'speak',value:'Klingel'});
+});

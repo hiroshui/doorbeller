@@ -16,7 +16,8 @@
     "ntfy:setup": "node scripts/ntfy-setup.js setup",
     "ntfy:device": "node scripts/ntfy-setup.js",
     "test:ntfy": "node scripts/ntfy-integration.js",
-    "audio:prepare": "node scripts/audio-prepare.js"
+    "audio:prepare": "node scripts/audio-prepare.js",
+    "skill:prepare": "node --env-file=.env scripts/skill-prepare.js"
   },
   "dependencies": {
     "alexa-remote2": "8.1.1"

@@ -41,3 +41,7 @@ Der ntfy-Meldungscache dauert nominell eine Minute und dient dem iOS-Abruf, nich
 - [ntfy-Konfiguration und ACLs](https://docs.ntfy.sh/config/), [Publish-API](https://docs.ntfy.sh/publish/), [Handy-App](https://docs.ntfy.sh/subscribe/phone/), [Web-App](https://docs.ntfy.sh/subscribe/web/) sowie Release/Dockerfile/CLI-Quellen des fixierten Releases [v2.29.0](https://github.com/binwiederhier/ntfy/releases/tag/v2.29.0).
 
 Prüfstand: 08.10.2026. Echte Gerätezustellung und Browser-Banner werden nur dann als bestätigt geführt, wenn vor Ort geprüft; siehe Prüfbericht.
+
+## Separater eigener Musik-Skill
+
+`ALEXA_OUTPUT=speak` erhält den bisherigen Ausgabeweg. `skill` startet den separat registrierten Custom-Skill über die Bibliotheksfunktion `skill` oder explizit gewähltes `textCommand`. Der Skill-Endpunkt `/alexa/skill` liefert Clip und Text in einer einzigen SSML-Antwort; Reihenfolge before/after/only ist konfigurierbar. Amazon-Signatur, native OpenSSL-CA-Kette/SAN/Datum, Skill-ID, optionaler User und ±150 Sekunden Timestamp werden geprüft; Größenlimits, vier parallele Prüfungen und begrenzter Cert-Cache. Nur der konfigurierte Clip ist öffentlich lesbar. Kein SDK/node-forge hinzugefügt; keine neuen npm-Abhängigkeiten. Ohne Skill-ID bleibt der Endpoint gesperrt; ohne erfolgreiches Echo-Testen bleibt die Klingel im Speak-Modus. Details: [alexa-skill.md](alexa-skill.md).

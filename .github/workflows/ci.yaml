@@ -18,7 +18,7 @@ jobs:
       - name: Compose validation
         run: |
           cp .env.example .env
-          mkdir -p secrets
+          mkdir -p secrets data/audio
           node scripts/token.js > secrets/ring_token
           touch secrets/tunnel_token secrets/ntfy_publish_token
           docker compose config --quiet

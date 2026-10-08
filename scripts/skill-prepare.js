@@ -1,0 +1,17 @@
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+process.chdir(resolve(dirname(fileURLToPath(import.meta.url)), '..'));
+const base = new URL(process.env.ALEXA_SKILL_BASE_URL ?? 'https://doorbird.example.com');
+if (base.protocol !== 'https:' || base.username || base.password || base.search || base.hash || base.pathname !== '/') throw new Error('Use an HTTPS origin for ALEXA_SKILL_BASE_URL');
+const invocation = process.env.ALEXA_SKILL_INVOCATION ?? 'dungeon klingel';
+if (!/^[a-zäöüß ]{3,60}$/.test(invocation)) throw new Error('Invalid invocation name');
+const manifest = JSON.parse(readFileSync('skills/dungeon-klingel/skill.json'));
+const model = JSON.parse(readFileSync('skills/dungeon-klingel/interaction-model.json'));
+manifest.manifest.apis.custom.endpoint.uri = base.origin + '/alexa/skill';
+manifest.manifest.publishingInformation.locales['de-DE'].examplePhrases = [`Alexa, öffne ${invocation}`, `Alexa, sage ${invocation} spiele die Klingel`];
+model.interactionModel.languageModel.invocationName = invocation;
+mkdirSync('data/alexa-skill', { recursive: true });
+writeFileSync('data/alexa-skill/skill.json', JSON.stringify(manifest, null, 2) + '\n');
+writeFileSync('data/alexa-skill/interaction-model.json', JSON.stringify(model, null, 2) + '\n');
+console.log('Prepared console files in data/alexa-skill/. Endpoint: ' + base.origin + '/alexa/skill');

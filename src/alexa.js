@@ -70,7 +70,10 @@ export class AlexaClient {
     if (!this.ready()) throw new Error('Unavailable');
     const targets = this.resolveTargets(); // Validate all before sending anything.
     const results = await Promise.allSettled(targets.map(serial => deadline(() => new Promise((resolve, reject) => {
-      this.remote.sendSequenceCommand(serial, 'speak', this.cfg.text, (err, result) => {
+      const skill = this.cfg.output === 'skill';
+      const command = !skill ? 'speak' : this.cfg.skill.launch === 'text' ? 'textCommand' : 'skill';
+      const value = !skill ? this.cfg.text : this.cfg.skill.launch === 'text' ? `öffne ${this.cfg.skill.invocation}` : this.cfg.skill.id;
+      this.remote.sendSequenceCommand(serial, command, value, (err, result) => {
         if (err || result?.success === false || result?.error || result?.errors) reject(new Error('Alexa rejected request'));
         else resolve();
       });

@@ -1,0 +1,31 @@
+{
+  "manifest": {
+    "manifestVersion": "1.0",
+    "publishingInformation": {
+      "locales": {
+        "de-DE": {
+          "name": "Dungeon Klingel",
+          "summary": "Eigener kurzer Klingelclip mit Ansage.",
+          "description": "Spielt einen vorbereiteten Klingelclip und die konfigurierte Ansage auf dem eigenen Echo ab.",
+          "examplePhrases": ["Alexa, öffne dungeon klingel", "Alexa, sage dungeon klingel spiele die Klingel"]
+        }
+      },
+      "isAvailableWorldwide": false,
+      "distributionCountries": ["DE"],
+      "testingInstructions": "Für eigene Geräte im Development-Modus testen. Kein Store-Publishing eingerichtet."
+    },
+    "apis": {
+      "custom": {
+        "endpoint": { "uri": "https://doorbird.example.com/alexa/skill", "sslCertificateType": "Wildcard" },
+        "interfaces": []
+      }
+    },
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "usesPersonalInfo": false,
+      "isChildDirected": false,
+      "isExportCompliant": true,
+      "containsAds": false
+    }
+  }
+}

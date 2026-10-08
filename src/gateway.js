@@ -1,7 +1,9 @@
 import http from 'node:http';
+import { createSkillHandler, serveSkillAudio } from './skill.js';
 import { timingSafeEqual } from 'node:crypto';
 import { log as defaultLog } from './alexa.js';
-export function createGateway(cfg, alexa, { now = Date.now, log = defaultLog } = {}) {
+export function createGateway(cfg, alexa, { now = Date.now, log = defaultLog, skillVerify } = {}) {
+  const skillHandler = createSkillHandler(cfg, { now, log, ...(skillVerify ? { verify: skillVerify } : {}) });
   let queue = [], running = false, stopping = false, lastAccepted = -Infinity;
   async function drain() {
     if (running || stopping) return;
@@ -18,6 +20,8 @@ export function createGateway(cfg, alexa, { now = Date.now, log = defaultLog } =
     let url;
     try { url = new URL(req.url, 'http://gateway'); } catch { return reply(400, { error: 'bad_request' }); }
     // Never log URL, headers, body, upstream errors or credentials.
+    if (serveSkillAudio(req, res, cfg.skill, url.pathname)) return;
+    if (url.pathname === '/alexa/skill') { if (stopping) return reply(503, { error: 'stopping' }); void skillHandler(req, res); return; }
     if (req.method === 'GET' && url.pathname === '/health/live') return reply(stopping ? 503 : 200, { live: !stopping });
     if (req.method === 'GET' && url.pathname === '/health/ready') return reply(!stopping && alexa.ready() ? 200 : 503, { ready: !stopping && alexa.ready(), ...(alexa.status?.() ?? { alexa: alexa.state }) });
     if (url.pathname !== '/ring') return reply(404, { error: 'not_found' });
