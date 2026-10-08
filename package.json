@@ -1,0 +1,28 @@
+{
+  "name": "doorbeller",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/main.js",
+    "login": "node src/login.js",
+    "test": "node --test",
+    "token": "node scripts/token.js",
+    "postinstall": "node scripts/patch-alexa.cjs",
+    "mac:install": "node scripts/mac-service-install.js",
+    "ntfy:setup": "node scripts/ntfy-setup.js setup",
+    "ntfy:device": "node scripts/ntfy-setup.js",
+    "test:ntfy": "node scripts/ntfy-integration.js",
+    "audio:prepare": "node scripts/audio-prepare.js",
+    "skill:prepare": "node --env-file=.env scripts/skill-prepare.js"
+  },
+  "dependencies": {
+    "alexa-remote2": "8.1.1"
+  },
+  "overrides": {
+    "cookie": "0.7.2"
+  }
+}

@@ -1,0 +1,5 @@
+FROM docker.io/binwiederhier/ntfy:v2.29.0
+USER root
+RUN mkdir -p /var/lib/ntfy && chown 1000:1000 /var/lib/ntfy && chmod 700 /var/lib/ntfy
+USER 1000:1000
+ENTRYPOINT ["/bin/sh", "-c", "umask 077; exec ntfy serve"]

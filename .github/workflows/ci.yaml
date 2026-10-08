@@ -1,0 +1,44 @@
+name: Gateway checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Upstream login regression tests
+        run: node node_modules/alexa-cookie2/test/run-tests.js
+      - name: Compose validation
+        run: |
+          cp .env.example .env
+          mkdir -p secrets data/audio
+          node scripts/token.js > secrets/ring_token
+          touch secrets/tunnel_token secrets/ntfy_publish_token
+          docker compose config --quiet
+          docker compose --profile tunnel --profile setup config --quiet
+          docker compose -f compose.yaml -f compose.local.yaml config --quiet
+      - name: Build gateway image
+        run: docker compose build gateway
+      - name: Real ntfy integration and ACL checks
+        env:
+          CONTAINER_RUNTIME: docker
+        run: npm run test:ntfy
+      - name: Container smoke test without Amazon credentials
+        run: |
+          docker compose -f compose.yaml -f compose.local.yaml up -d gateway
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8080/health/live; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:8080/health/live
+          test "$(curl --silent -o /tmp/ready.json -w '%{http_code}' http://127.0.0.1:8080/health/ready)" = 503
+          grep -q 'login_required' /tmp/ready.json
+          test "$(curl --silent -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/ring)" = 401
+          docker compose down
